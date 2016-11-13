@@ -13,6 +13,8 @@ GEM
     multipart-post (2.0.0)
     nokogiri (1.6.8.1)
       mini_portile2 (~> 2.1.0)
+    nokogiri (1.6.8.1-x64-mingw32)
+      mini_portile2 (~> 2.1.0)
     public_suffix (2.0.4)
     redd (0.7.10)
       faraday (~> 0.9)
@@ -22,6 +24,7 @@ GEM
 
 PLATFORMS
   ruby
+  x64-mingw32
 
 DEPENDENCIES
   nokogiri (~> 1.6)

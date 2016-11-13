@@ -5,8 +5,10 @@ require 'open-uri'
 require 'nokogiri'
 require 'redd'
 
+$test_run = ARGV.first == '-t'
+
 def make_alts(word, line)
-  line.text.gsub(/\d+\b|:|,/, '').gsub(/[[:space:]]+/, ' ').gsub(/ \(\w\)/, '').strip.split.reject { |alt| alt == word }
+  line.text.gsub(/\d+\b|:|,/, '').gsub(/[[:space:]]+/, ' ').gsub(/ \([[:word:]\)/, '').strip.split.reject { |alt| alt == word or alt == '' }
 end
 
 def make_types(line)
@@ -25,8 +27,7 @@ def make_types(line)
 end
 
 def make_plurals(word, line)
-  puts line.text
-  line.text.scan(/ll.(?: (?:\(prin\) )?[\w()-]+,?)+/).map do |entry|
+  line.text.scan(/ll.(?: (?:\(prin\) )?[[[:word:]]()-]+,?)+/).map do |entry|
     entry.sub('ll. ', '').split(', ')
   end.flatten.map do |pattern|
     if pattern.include?('(prin) ') or pattern.include?('hefyd fel') or pattern.include?('weithiau fel') then nil
@@ -40,7 +41,7 @@ while true
   tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
   offset = tomorrow - Time.now
   puts 'sleeping til midnight (' + offset.to_s + ' secs)'
-  sleep(offset)
+  sleep(offset) if not $test_run
 
   word = nil
 
@@ -54,27 +55,29 @@ while true
           welsh_lines: doc.css('.p12'),
           meanings: doc.css('.p22'),
         }
-
         word = {
           word: unit[:headword],
+          pronunciations: [],
           alts: make_alts(unit[:headword], unit[:welsh_lines][0]),
           plurals: make_plurals(unit[:headword], unit[:welsh_lines][2]),
           types: make_types(unit[:welsh_lines][2]),
-          meanings: unit[:meanings].map {|m| m.text },
+          meanings: unit[:meanings].map {|m| m.text.sub(/(?<!also fig)\.$/, '') },
         }
+        break
       end
     end
   end
 
+  text = '[**' + word[:word].capitalize + '**](http://forvo.com/word/' + word[:word] + '/#cy) - ' + word[:meanings].join('; ') + "\n\n" +
+         (word[:pronunciations].any? ? '*Pronunciation*: ' + word[:pronunciations].join(', ') + "\n" : '') +
+         (word[:types].any? ? '*Type*: ' + word[:types].join(', ') + "\n" : '') +
+         (word[:plurals].any? ? '*Plurals*: ' + word[:plurals].join(', ') + "\n" : '') +
+         (word[:alts].any? ? '*Alt. spellings*: ' + word[:alts].join(', ') : '')
+  puts text
+  next if $test_run
+
   reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot 0.1.0')
   reddit.authorize!
   learnwelsh = reddit.subreddit_from_name('learnwelsh')
-  learnwelsh.submit(
-    'WWOTD: ' + word[:word],
-    text: word[:word] + ' - ' + word[:meanings].join(' ') + "\n\n" +
-          'pronunciation: ' + 'TODO' + "\n" +
-          'type: ' + word[:meanings].join(' ') + "\n" +
-          'plurals: ' + word[:plurals].join(', ') + "\n" +
-          'alt spellings: ' + word[:alts].join(', '),
-    sendreplies: false)
+  learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
 end
