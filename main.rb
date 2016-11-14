@@ -8,7 +8,7 @@ require 'redd'
 $test_run = ARGV.first == '-t'
 
 def make_alts(word, line)
-  line.text.gsub(/\d+\b|:|,/, '').gsub(/[[:space:]]+/, ' ').gsub(/ \([[:word:]\)/, '').strip.split.reject { |alt| alt == word or alt == '' }
+  line.text.gsub(/\d+\b|:|,/, '').gsub(/[[:space:]]+/, ' ').gsub(/ \([[:word:]]\)/, '').strip.split.reject { |alt| alt == word or alt == '' }
 end
 
 def make_types(line)
