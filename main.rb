@@ -57,25 +57,30 @@ while true
   word = nil
 
   while true
-    if open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/
-      random_word_id = $~.to_s
-      doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + random_word_id))
-      if doc.search('.p12c').any? {|elem| elem.text =~ /\b(19|2\d)\d\d\b|2\d(-\d)?g./ }
-        unit = {
-          headword: doc.css('head').first.text.sub(/\d+$/, ''),
-          welsh_lines: doc.css('.p12'),
-          meanings: doc.css('.p22'),
-        }
-        word = {
-          word: unit[:headword],
-          pronunciations: [],
-          alts: make_alts(unit[:headword], unit[:welsh_lines][0]),
-          plurals: make_plurals(unit[:headword], unit[:welsh_lines][2]),
-          types: make_types(unit[:welsh_lines][2]),
-          meanings: unit[:meanings].map {|m| m.text.sub(/(?<!also fig)\.$/, '') },
-        }
-        break
+    begin
+      if open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/
+        random_word_id = $~.to_s
+        doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + random_word_id))
+        if doc.search('.p12c').any? {|elem| elem.text =~ /\b(19|2\d)\d\d\b|2\d(-\d)?g./ }
+          unit = {
+            headword: doc.css('head').first.text.sub(/\d+$/, ''),
+            welsh_lines: doc.css('.p12'),
+            meanings: doc.css('.p22'),
+          }
+          word = {
+            word: unit[:headword],
+            pronunciations: [],
+            alts: make_alts(unit[:headword], unit[:welsh_lines][0]),
+            plurals: make_plurals(unit[:headword], unit[:welsh_lines][2]),
+            types: make_types(unit[:welsh_lines][2]),
+            meanings: unit[:meanings].map {|m| m.text.sub(/(?<!also fig)\.$/, '') },
+          }
+          break
+        end
       end
+    rescue
+      puts 'error finding word'
+      next
     end
   end
 
