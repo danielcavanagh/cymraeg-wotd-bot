@@ -1,11 +1,22 @@
 # encoding: UTF-8
+$stdout.sync = true
+
+$version = '0.2.0'
+puts 'cymraeg wotd bot ' + $version
 
 require 'date'
 require 'open-uri'
 require 'nokogiri'
 require 'redd'
 
-$test_run = ARGV.first == '-t'
+$single_run = false
+$test_run = false
+while ARGV.any? and ARGV.first[0] == '-'
+  case ARGV.shift
+  when '-s' then $single_run = true
+  when '-t' then $test_run = true
+  end
+end
 
 def make_alts(word, line)
   line.text.gsub(/\d+\b|:|,/, '').gsub(/[[:space:]]+/, ' ').gsub(/ \([[:word:]]\)/, '').strip.split.reject { |alt| alt == word or alt == '' }
@@ -41,7 +52,7 @@ while true
   tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
   offset = tomorrow - Time.now
   puts 'sleeping til midnight (' + offset.to_s + ' secs)'
-  sleep(offset) if not $test_run
+  sleep(offset) if not $test_run and not $single_run
 
   word = nil
 
@@ -68,16 +79,19 @@ while true
     end
   end
 
-  text = '[**' + word[:word].capitalize + '**](http://forvo.com/word/' + word[:word] + '/#cy) - ' + word[:meanings].join('; ') + "\n\n" +
-         (word[:pronunciations].any? ? '*Pronunciation*: ' + word[:pronunciations].join(', ') + "\n" : '') +
-         (word[:types].any? ? '*Type*: ' + word[:types].join(', ') + "\n" : '') +
-         (word[:plurals].any? ? '*Plurals*: ' + word[:plurals].join(', ') + "\n" : '') +
-         (word[:alts].any? ? '*Alt. spellings*: ' + word[:alts].join(', ') : '')
+  text = '[**' + word[:word].capitalize + '**](http://forvo.com/word/' + word[:word] + '/#cy) - ' + word[:meanings].join('; ') +
+         (word[:pronunciations].any? ? "\n\n***Pronunciation***: " + word[:pronunciations].join(', ') : '') +
+         (word[:types].any? ? "\n\n***Type***: " + word[:types].join(', ') : '') +
+         (word[:plurals].any? ? "\n\n***Plurals***: " + word[:plurals].join(', ') : '') +
+         (word[:alts].any? ? "\n\n***Alt. spellings***: " + word[:alts].join(', ') : '')
   puts text
-  next if $test_run
 
-  reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot 0.1.0')
-  reddit.authorize!
-  learnwelsh = reddit.subreddit_from_name('learnwelsh')
-  learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+  if not $test_run
+    reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot ' + $version)
+    reddit.authorize!
+    learnwelsh = reddit.subreddit_from_name('learnwelsh')
+    learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+  end
+
+  break if $single_run
 end
