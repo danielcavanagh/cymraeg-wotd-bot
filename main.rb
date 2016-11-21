@@ -64,7 +64,7 @@ class Pronounce
       .gsub('ɨ', 'i')
       .gsub('ɑːi', 'ai')
 
-    # TODO short vowel w
+    # TODO acute accent
     # TODO short vowel w
     # TODO irregular stress
     # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
@@ -106,33 +106,33 @@ class Pronounce
       # w glides
       .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
       .gsub(/(?<=ch)w/, 'ʷ') \
-      # long Vowels
+      # long vowels
       .gsub('â', 'ɑː')
       .gsub('ê', 'eː')
       .gsub('î', 'iː')
       .gsub('ô', 'oː')
       .gsub(/û|ŷ/, 'ɨː')
       .gsub('ŵ', 'uː') \
-      # short Vowels
+      # short vowels
       .gsub('à', 'a')
       .gsub('è', 'ɛ')
       .gsub('ì', 'ɪ')
       .gsub('ò', 'ɔ')
       .gsub(/ù|ỳ/, 'ɨ̞')
       .gsub('ẁ', 'ʊ') \
-      # diphthongs
+      # diphthongs TODO how many of these are needed
       .gsub(/@#|á#/, 'aɨ')
-      .gsub('@w', 'au')
+      .gsub('@w', 'au') # TODO also long a in north
       .gsub('@%', 'ɑːɨ')
       .gsub('%!', 'əi')
       .gsub('%#', 'əɨ')
-      .gsub('%w', 'ɛu')
+      .gsub('%w', 'ɛu') # TODO also long e in north
       .gsub('!w', 'ɪu')
-      .gsub(/#w|yw/, 'ɨu') # XXX does yw sound like this in all syllables, or just the final syllable?
+      .gsub(/#w|yw/, 'ɨu') # TODO also əu for yw sometimes
       .gsub('&!', 'ɔi')
-      .gsub('&%', 'ɔɨ')
-      .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') \
-      # TODO also /uːɨ/ in north
+      .gsub('&#', 'ɔɨ') # TODO also long o in north
+      .gsub('&%', 'ɔɨ') # TODO also long o in north
+      .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') # TODO also long w in north. sometimes w is w, not u, depending on preceeding consonant
       .gsub('y', 'ə') # lucky last. undo this in the final syllable later on
   end
 
