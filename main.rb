@@ -51,6 +51,7 @@ class Pronounce
       syll.sub(/(?<=#{Vowel})(?=(ɬ|s)#{Consonant})/, 'ː') # long vowels before consonant clusters beginning ll and s
     end
     north_ipa = deprotect_vowels(north_syllables.join)
+                .gsub('l', 'ɫ')
 
     # XXX 'tyst' is wrong for south
     south_syllables = long_syllables(stressed_syllables, stress_i).each_with_index.map do |syll, i|
@@ -59,12 +60,12 @@ class Pronounce
       end
     end
     south_ipa = deprotect_vowels(south_syllables.join)
-      .gsub('ɨ', 'i')
       .gsub('ɨ̞', 'ɪ')
+      .gsub('ɨ', 'i')
       .gsub('ɑːi', 'ai')
 
     # TODO irregular stress
-    # TODO epenthetic echo Vowel, eg. cenedl -> 'kenedel
+    # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
 
     [north_ipa, south_ipa]
   end
@@ -198,25 +199,35 @@ class BangorParser
   end
 
   def find
-    word = gpc.word
+    {
+      word: word,
+      pronunciations: Pronounce.new(word).pronunciations,
+      plurals: is_noun ? gpc.plurals : [],
+      types: types,
+      stem: gpc.stem,
+      alt: gpc.alt,
+      meanings: entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).join(', ') }
+    }
+  end
+
+  def word
+    @word ||= gpc.word
+  end
+
+  def data
+    return @data if @data
     json = open('http://api-dev.termau.cymru/Cysgair/Search/Default.ashx?apikey=C353DE38D8DB4BD6ABD1C78109871EF8&format=json&string=' + word).read rescue nil
-    data = JSON.parse(json, symbolize_names: true) rescue { entries: [] }
-    data[:entries].lazy.map do |e|
-      entry = Nokogiri::HTML(e[:src]).at_css('[property=CSGR_DictionaryEntry]')
-      {
-        word: word,
-        pronunciations: pronunciations(word),
-        plurals: gpc.plurals,
-        types: types(entry.css('[property=CSGR_ptOfSpeech]').map(&:text)),
-        stem: gpc.stem,
-        alt: gpc.alt,
-        meanings: entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).join(', ') }
-      }
+    @data = JSON.parse(json, symbolize_names: true) rescue { entries: [] }
+  end
+
+  def main_entry
+    @entry ||= data[:entries].lazy.map do |e|
+      Nokogiri::HTML(e[:src]).at_css('[property=CSGR_DictionaryEntry]')
     end.find {|e| e }
   end
 
-  def types(abbrs)
-    abbrs.map do |abbr|
+  def types
+    @types ||= main_entry.css('[property=CSGR_ptOfSpeech]').map(&:text).map do |abbr|
       case abbr
       when 'adf' then 'adverb'
       when 'ans' then 'adjective'
@@ -228,6 +239,14 @@ class BangorParser
       else nil
       end
     end.compact
+  end
+
+  def meanings
+     @meanings ||= main_entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).join(', ') }
+  end
+
+  def is_noun
+    types.any? do |type| type =~ /\bnoun/ end
   end
 end
 
@@ -242,7 +261,7 @@ class GPCParser
     if doc.search('.p12c').any? {|elem| elem.text =~ /\b(19|2\d)\d\d\b|2\d(-\d)?g./ }
       return {
         word: word,
-        pronunciations: pronunciations(word),
+        pronunciations: Pronounce.new(word).pronunciations,
         plurals: plurals,
         stem: stem,
         types: types,
