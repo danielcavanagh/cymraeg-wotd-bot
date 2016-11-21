@@ -186,10 +186,6 @@ class Pronounce
   end
 end
 
-p = Pronounce.new(ARGV.first).pronunciations
-puts p[:north][0], p[:south][0]
-exit
-
 class BangorParser
   attr_reader :gpc
 
@@ -198,15 +194,15 @@ class BangorParser
   end
 
   def find
-    {
+    main_entry ? {
       word: word,
       pronunciations: Pronounce.new(word).pronunciations,
       plurals: is_noun ? gpc.plurals : [],
       types: types,
       stem: gpc.stem,
       alt: gpc.alt,
-      meanings: entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).join(', ') }
-    }
+      meanings: meanings,
+    } : nil
   end
 
   def word
@@ -220,7 +216,7 @@ class BangorParser
   end
 
   def main_entry
-    @entry ||= data[:entries].lazy.map do |e|
+    @main_entry ||= data[:entries].lazy.map do |e|
       Nokogiri::HTML(e[:src]).at_css('[property=CSGR_DictionaryEntry]')
     end.find {|e| e }
   end
@@ -380,7 +376,7 @@ while true
     end
 
   text = headword + ' - ' + word[:meanings].join('; ') +
-         (word[:pronunciations].any? ? "\n\n***Pronunciation***: " + word[:pronunciations].join(', ') : '') +
+         (word[:pronunciations] ? "\n\n***Pronunciation***: /" + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)' : '') +
          (word[:types].any? ? "\n\n***Type***: " + word[:types].join(', ') : '') +
          (word[:plurals].any? ? "\n\n***Plurals***: " + word[:plurals].join(', ') : '') +
          (word[:alt] ? "\n\n***Alt.***: " + word[:alt] : '') +
