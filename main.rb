@@ -28,7 +28,8 @@ end
 class Pronounce
   UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɬmm̥nn̥prr̥sʃtθvx]'
   Consonant = "(#{UncoveredConsonant})"
-  Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ]'
+  Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊə]'
+  LongableVowel = '[@%!#&]'
 
   attr_reader :word
 
@@ -51,19 +52,20 @@ class Pronounce
       syll.sub(/(?<=#{Vowel})(?=(ɬ|s)#{Consonant})/, 'ː') # long vowels before consonant clusters beginning ll and s
     end
     north_ipa = deprotect_vowels(north_syllables.join)
-                .gsub('l', 'ɫ')
+      .gsub('l', 'ɫ') # dark l
 
-    # XXX 'tyst' is wrong for south
     south_syllables = long_syllables(stressed_syllables, stress_i).each_with_index.map do |syll, i|
       if i == syllables.length - 2 then syll.sub(/(?<=#{Vowel})ː(?=ɬ#{Consonant})/, '') # short vowels in the penult before ll
       else syll
       end
     end
     south_ipa = deprotect_vowels(south_syllables.join)
-      .gsub('ɨ̞', 'ɪ')
+      .gsub('ɨ̞', 'ɪ') # u -> i
       .gsub('ɨ', 'i')
       .gsub('ɑːi', 'ai')
 
+    # TODO short vowel w
+    # TODO short vowel w
     # TODO irregular stress
     # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
 
@@ -72,7 +74,7 @@ class Pronounce
 
   def syllables
     @syllables ||=
-      base_ipa.to_enum(:scan, /^#{Consonant}*|(?<=#{UncoveredConsonant})?#{Consonant}+?#{Vowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
+      base_ipa.to_enum(:scan, /^#{Consonant}*|(?<!#{UncoveredConsonant})#{Consonant}#{Vowel}|(?<=#{UncoveredConsonant})#{Consonant}+#{Vowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
       .reverse.scan(base_ipa.length..0) { |prev, pos| pos...prev.first }.reverse # map the indices to ranges
       .map { |range| base_ipa[range] } # map indices to substrings (ie. syllables)
   end
@@ -142,7 +144,7 @@ class Pronounce
     # TODO acute accent (´) is sometimes used to mark a stressed final syllable in a polysyllabic word.
     @stressed_syllables ||= syllables.each_with_index.map do |syll, i|
       stressed = i == stress_i ? 'ˈ' + syll : syll
-      if i == syllables.length - 1 and stressed =~ /#{Consonant}ə#{Consonant}#{syllables.length == 1 ? '+' : ''}$/ then stressed.sub('ə', '#')
+      if i == syllables.length - 1 then stressed.sub(/(?<=#{UncoveredConsonant})ə(?=#{UncoveredConsonant})#{syllables.length > 1 ? '?' : ''}/, '#')
       else stressed
       end
     end
@@ -157,18 +159,15 @@ class Pronounce
   end
 
   def long_syllable(syllable, next_syll)
-    if next_syll.nil? then
-      if syllable !~ /#{Consonant}/
-        syllable # this should only match single-vowel words
+    if next_syll.nil?
+      if syllable !~ /#{Consonant}/ then syllable # this should only match single-vowel words
       else
         syllable
-          .sub(/(?<!#{Vowel})(?<=#{Vowel})(?=[bdðfgθvx]$)/, 'ː') # preceeding certain consonants
-          .sub(/(?<=#{Vowel})(?=s?$)/, 'ː') # word-final s or word-final vowel
+          .sub(/(?<!#{Vowel})(?<=#{LongableVowel})(?=[bdðfgθvx]$)/, 'ː') # preceeding certain consonants
+          .sub(/(?<=#{LongableVowel})(?=s?$)/, 'ː') # word-final s or word-final vowel
       end
-    else
-      if syllable =~ /#{Vowel}$/ and next_syll =~ /^[bdðfgθvx]/ then syllable + 'ː' # preceeding certain consonants
-      else syllable
-      end
+    elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bdðfgθvx]/ then syllable + 'ː' # preceeding certain consonants
+    else syllable
     end
   end
 
