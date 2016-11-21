@@ -217,7 +217,7 @@ class BangorParser
 
   def main_entry
     @main_entry ||= data[:entries].lazy.map do |e|
-      Nokogiri::HTML(e[:src]).at_css('[property=CSGR_DictionaryEntry]')
+      e[:headword] == word && Nokogiri::HTML(e[:src]).at_css('[property=CSGR_DictionaryEntry]')
     end.find {|e| e }
   end
 
@@ -268,11 +268,11 @@ class GPCParser
   end
 
   def alt
-    @alt ||= is_number? ? feminine_number : nil
+    @alt ||= welsh_lines[2]&.text =~ /\(b\./ ? feminine_alt : nil
   end
 
   def types
-    @types ||= welsh_lines[2].css('h').map do |type|
+    @types ||= (welsh_lines[2].css('h').map do |type|
       case type.text
       when 'a.' then 'adjective'
       when 'eg.', 'rhif.' then 'noun (masculine)'
@@ -283,16 +283,16 @@ class GPCParser
       when 'cys.' then 'conjunction'
       else nil
       end
-    end.compact
+    end.compact rescue [])
   end
 
-  def feminine_number
-    @feminine_number ||= welsh_lines[2].text.match(/b. ([[:word:]]+)/)[1] + ' (feminine)'
+  def feminine_alt
+    @feminine_alt ||= welsh_lines.length >= 3 ? welsh_lines[2].text.match(/\(b. ([[:word:]]+)/)[1] + ' (feminine)' : nil
   end
 
   def plurals
     return @plurals if @plurals
-    return @plurals = [] if is_number?
+    return @plurals = [] if is_number? or welsh_lines.length < 3
 
     @plurals =
       welsh_lines[2].text.scan(/ll.(?: (?:\(prin\) )?[[[:word:]]()-]+,?)+/).map do |entry|
@@ -327,11 +327,11 @@ class GPCParser
   end
 
   def is_number?
-    @is_number ||= welsh_lines[2].text.include?('rhif.')
+    @is_number ||= welsh_lines[2]&.text.include?('rhif.')
   end
 
   def is_verb?
-    @is_verb ||= types.first.include?('verb')
+    @is_verb ||= types.any? && types.first.include?('verb')
   end
 
   private
@@ -378,7 +378,7 @@ while true
   text = headword + ' - ' + word[:meanings].join('; ') +
          (word[:pronunciations] ? "\n\n***Pronunciation***: /" + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)' : '') +
          (word[:types].any? ? "\n\n***Type***: " + word[:types].join(', ') : '') +
-         (word[:plurals].any? ? "\n\n***Plurals***: " + word[:plurals].join(', ') : '') +
+         (word[:plurals].any? ? "\n\n***Plural***: " + word[:plurals].first : '') +
          (word[:alt] ? "\n\n***Alt.***: " + word[:alt] : '') +
          (word[:stem] ? "\n\n***Stem***: " + word[:stem] : '')
   puts text
