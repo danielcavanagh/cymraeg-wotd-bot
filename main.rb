@@ -1,7 +1,7 @@
 # encoding: utf-8
 $stdout.sync = true
 
-$version = '0.4.0'
+$version = '0.5.0'
 puts 'cymraeg bot ' + $version
 
 require 'date'
@@ -13,20 +13,27 @@ require 'redd'
 require './bangor-parser.rb'
 require './gpc-parser.rb'
 
-$single_run = false
+$pronounce_run = false
 $test_run = false
 while ARGV.any? and ARGV.first[0] == '-'
   case ARGV.shift
-  when '-s' then $single_run = true
+  when '-p' then $pronounce_run = true
   when '-t' then $test_run = true
   end
 end
 
+if $pronounce_run
+  puts Pronouncer.new(ARGV.first).pronunciations
+  exit
+end
+
 while true
-  tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
-  offset = tomorrow - Time.now
-  puts 'sleeping til midnight (' + offset.to_s + ' secs)'
-  sleep(offset) if not $test_run and not $single_run
+  if not $test_run
+    tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
+    offset = tomorrow - Time.now
+    puts 'sleeping til midnight (' + offset.to_s + ' secs)'
+    sleep(offset)
+  end
 
   word = nil
 
@@ -69,7 +76,6 @@ while true
     reddit.authorize!
     learnwelsh = reddit.subreddit_from_name('learnwelsh')
     learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+  else break
   end
-
-  break if $single_run
 end
