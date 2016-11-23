@@ -14,7 +14,7 @@ module CymraegBot
 
     UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɫɬmm̥nn̥prr̥sʃtθvx]'
     Consonant = "(#{UncoveredConsonant})"
-    Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊə]'
+    Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=ə]'
     LongableVowel = '[@%!#&]'
 
     attr_reader :word
@@ -119,7 +119,7 @@ module CymraegBot
         .gsub('&!', 'ɔi')
         .gsub('&#', 'ɔɨ') # TODO also long o in north
         .gsub('&%', 'ɔɨ') # TODO also long o in north
-        .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') # TODO also long w in north. sometimes w is w, not u, depending on preceeding consonant
+        .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') # TODO also long w in north. sometimes w is w, not u, depending on preceeding consonant?
         .gsub('y', 'ə') # lucky last. undo this in the final syllable later on
     end
 
