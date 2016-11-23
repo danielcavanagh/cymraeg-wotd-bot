@@ -12,6 +12,7 @@ require 'redd'
 
 require './bangor-parser.rb'
 require './gpc-parser.rb'
+require './pronouncer.rb'
 
 $pronounce_run = false
 $test_run = false
@@ -23,7 +24,7 @@ while ARGV.any? and ARGV.first[0] == '-'
 end
 
 if $pronounce_run
-  puts Pronouncer.new(ARGV.first).pronunciations
+  puts CymraegBot::Pronouncer.new(ARGV.first).pronunciations
   exit
 end
 

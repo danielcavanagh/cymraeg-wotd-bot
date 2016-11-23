@@ -88,10 +88,11 @@ module CymraegBot
         .gsub('th', 'θ')
         .gsub('ch', 'x')
         .gsub(/(?<!f)f/, 'v')
-        .gsub(/!(?=#{Vowel})/, 'j') \
-        # w glides
+        .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel})/, 'j') \
+        # w
         .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
-        .gsub(/(?<=ch)w/, 'ʷ') \
+        .gsub(/(?<=ch)w/, 'ʷ')
+        .gsub(/(?<=#{UncoveredConsonant})w(?=#{UncoveredConsonant})/, '=') \
         # long vowels
         .gsub('â', 'ɑː')
         .gsub('ê', 'eː')
@@ -169,6 +170,8 @@ module CymraegBot
         .gsub('&', 'ɔ')
         .gsub('#ː', 'ɨː')
         .gsub('#', 'ɨ̞')
+        .gsub('=ː', 'uː')
+        .gsub('=', 'ʊ̞')
     end
   end
 end
