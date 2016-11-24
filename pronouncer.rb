@@ -51,7 +51,6 @@ module CymraegBot
         .gsub('ɑːi', 'ai')
 
       # TODO acute accent
-      # TODO short vowel w
       # TODO irregular stress
       # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
 
@@ -171,7 +170,7 @@ module CymraegBot
         .gsub('#ː', 'ɨː')
         .gsub('#', 'ɨ̞')
         .gsub('=ː', 'uː')
-        .gsub('=', 'ʊ̞')
+        .gsub('=', 'ʊ')
     end
   end
 end
