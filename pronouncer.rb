@@ -20,7 +20,7 @@ module CymraegBot
     attr_reader :word
 
     def initialize(word)
-      @word = word
+      @word = word.downcase
     end
 
     def pronunciations
@@ -50,7 +50,6 @@ module CymraegBot
         .gsub('ɨ', 'i')
         .gsub('ɑːi', 'ai')
 
-      # FIX adneuwr -> /ˈadnɨ̞ɨwr/ (North), /ˈadnɪiwr/ (South)
       # TODO acute accent
       # TODO irregular stress
       # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
@@ -91,8 +90,8 @@ module CymraegBot
         .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel})/, 'j') \
         # w
         .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
-        .gsub(/(?<=ch)w/, 'ʷ')
-        .gsub(/(?<=#{UncoveredConsonant})w(?=#{UncoveredConsonant})/, '=') \
+        .gsub(/(?<=x)w/, 'ʷ')
+        .gsub(/(?<=#{UncoveredConsonant}|#{Vowel}{2})w(?=#{UncoveredConsonant})/, '=') \
         # long vowels
         .gsub('â', 'ɑː')
         .gsub('ê', 'eː')
@@ -111,8 +110,8 @@ module CymraegBot
         .gsub(/@#|á#/, 'aɨ')
         .gsub('@w', 'au') # TODO also long a in north
         .gsub('@%', 'ɑːɨ')
-        .gsub('%!', 'əi')
-        .gsub('%#', 'əɨ')
+        .gsub('%!', 'ei')
+        .gsub('%#', 'eɨ')
         .gsub('%w', 'ɛu') # TODO also long e in north
         .gsub('!w', 'ɪu')
         .gsub(/#w|yw/, 'ɨu') # TODO also əu for yw sometimes
