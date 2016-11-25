@@ -50,6 +50,7 @@ module CymraegBot
         .gsub('ɨ', 'i')
         .gsub('ɑːi', 'ai')
 
+      # FIX adneuwr -> /ˈadnɨ̞ɨwr/ (North), /ˈadnɪiwr/ (South)
       # TODO acute accent
       # TODO irregular stress
       # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel

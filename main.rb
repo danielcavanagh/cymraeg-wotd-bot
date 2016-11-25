@@ -14,6 +14,8 @@ require './bangor-parser.rb'
 require './gpc-parser.rb'
 require './pronouncer.rb'
 
+# FIX word 'us' has no data
+
 $pronounce_run = false
 $test_run = false
 while ARGV.any? and ARGV.first[0] == '-'
@@ -64,8 +66,16 @@ while true
     else word[:word].capitalize
     end
 
+  pronunciation =
+    if word[:pronunciations] then
+      if word[:pronunciations][:north][0] == word[:pronunciations][:south][0] then word[:pronunciations][:north][0]
+      else '/' + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)'
+      end
+    else nil
+    end
+
   text = headword + ' - ' + word[:meanings].join('; ') +
-         (word[:pronunciations] ? "\n\n***Pronunciation***: /" + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)' : '') +
+         (pronunciation ? "\n\n***Pronunciation***: " + pronunciation : '') +
          (word[:types].any? ? "\n\n***Type***: " + word[:types].join(', ') : '') +
          (word[:plurals].any? ? "\n\n***Plural***: " + word[:plurals].first : '') +
          (word[:alt] ? "\n\n***Alt.***: " + word[:alt] : '') +
