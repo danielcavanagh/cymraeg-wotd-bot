@@ -48,14 +48,14 @@ while true
         else nil
         end
       doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
+
+      gpc = CymraegBot::GPCParser.new(doc)
+      if gpc.word
+        word = CymraegBot::BangorParser.new(gpc).find
+        break if word
+      end
     rescue
       next
-    end
-
-    gpc = CymraegBot::GPCParser.new(doc)
-    if gpc.word
-      word = CymraegBot::BangorParser.new(gpc).find
-      break if word
     end
   end
 
