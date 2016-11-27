@@ -12,9 +12,9 @@ module CymraegBot
   class Pronouncer
     using Refinements
 
-    UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɫɬmm̥nn̥prr̥sʃtθvx]'
+    UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɫɬmm̥nn̥prr̥sʃtθvwx]'
     Consonant = "(#{UncoveredConsonant})"
-    Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=ə]'
+    Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=yə]'
     LongableVowel = '[@%!#&]'
 
     attr_reader :word
@@ -47,7 +47,8 @@ module CymraegBot
       end
       south_ipa = deprotect_vowels(south_syllables.join)
         .gsub('ɨ̞', 'ɪ') # u -> i
-        .gsub('ɨ', 'i')
+        .gsub('ɨ', 'i') # u -> i
+        .gsub(/(?<=#{UncoveredConsonant}|#{Vowel}{2})ɪ$/, 'i') # word-final ɪ is raised
         .gsub('ɑːi', 'ai')
 
       # TODO acute accent
@@ -59,7 +60,7 @@ module CymraegBot
 
     def syllables
       @syllables ||=
-        base_ipa.to_enum(:scan, /^#{Consonant}*|(?<!#{UncoveredConsonant})#{Consonant}#{Vowel}|(?<=#{UncoveredConsonant})#{Consonant}+#{Vowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
+        base_ipa.to_enum(:scan, /^#{Consonant}*|(?<!#{UncoveredConsonant})#{Consonant}(?=#{Vowel})|(?<=#{UncoveredConsonant})#{Consonant}+(?=#{Vowel})|(?<=#{Vowel}{2})#{Vowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
         .reverse.scan(base_ipa.length..0) { |prev, pos| pos...prev.first }.reverse # map the indices to ranges
         .map { |range| base_ipa[range] } # map indices to substrings (ie. syllables)
     end
@@ -80,6 +81,7 @@ module CymraegBot
         .gsub('j', 'dʒ')
         .gsub('ll', 'ɬ')
         .gsub('mh', 'm̥')
+        .gsub(/n+/, 'n')
         .gsub('nh', 'n̥')
         .gsub('ngh', 'ŋ̊')
         .gsub('rh', 'r̥')
@@ -114,7 +116,7 @@ module CymraegBot
         .gsub('%#', 'eɨ')
         .gsub('%w', 'ɛu') # TODO also long e in north
         .gsub('!w', 'ɪu')
-        .gsub(/#w|yw/, 'ɨu') # TODO also əu for yw sometimes
+        .gsub(/(#w|yw)(?=#{UncoveredConsonant})/, 'ɨu') # TODO also əu for yw sometimes
         .gsub('&!', 'ɔi')
         .gsub('&#', 'ɔɨ') # TODO also long o in north
         .gsub('&%', 'ɔɨ') # TODO also long o in north
