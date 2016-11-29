@@ -35,7 +35,7 @@ module CymraegBot
     def ipa
       north_long_i = stress_i == syllables.length - 1 ? stress_i : nil
       north_syllables = long_syllables(stressed_syllables, north_long_i).map do |syll|
-        syll.sub(/(?<=#{Vowel})(?=(ɬ|s)#{Consonant})/, 'ː') # long vowels before consonant clusters beginning ll and s
+        syll.sub(/(?<=#{Vowel})(?=(ɬ|s)#{Consonant})/, 'ː') # long vowels before consonant clusters beginning with ll and s
       end
       north_ipa = deprotect_vowels(north_syllables.join)
         .gsub('l', 'ɫ') # dark l
@@ -77,7 +77,6 @@ module CymraegBot
         # consonants
         .gsub(/c(?!h)/, 'k')
         .gsub('dd', 'ð')
-        .gsub(/ff|ph/, 'f')
         .gsub('j', 'dʒ')
         .gsub('ll', 'ɬ')
         .gsub('mh', 'm̥')
@@ -89,7 +88,10 @@ module CymraegBot
         .gsub('th', 'θ')
         .gsub('ch', 'x')
         .gsub(/(?<!f)f/, 'v')
+        .gsub(/ff|ph/, 'f')
         .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel})/, 'j') \
+        # clusters
+        .gsub('st', 'sd') \
         # w
         .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
         .gsub(/(?<=x)w/, 'ʷ')

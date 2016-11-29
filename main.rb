@@ -1,7 +1,7 @@
 # encoding: utf-8
 $stdout.sync = true
 
-$version = '0.5.0'
+$version = '0.5.5'
 puts 'cymraeg bot ' + $version
 
 require 'date'
@@ -68,8 +68,8 @@ while true
 
   pronunciation =
     if word[:pronunciations] then
-      if word[:pronunciations][:north][0] == word[:pronunciations][:south][0] then word[:pronunciations][:north][0]
-      else '/' + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)'
+      if word[:pronunciations][:north][0] == word[:pronunciations][:south][0] then '[' + word[:pronunciations][:north][0] + ']'
+      else '[' + word[:pronunciations][:north][0] + '] (North), [' + word[:pronunciations][:south][0] + '] (South)'
       end
     else nil
     end
