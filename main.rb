@@ -16,22 +16,22 @@ require './pronouncer.rb'
 
 # FIX word 'us' has no data
 
-$pronounce_run = false
-$test_run = false
+type = :normal
 while ARGV.any? and ARGV.first[0] == '-'
   case ARGV.shift
-  when '-p' then $pronounce_run = true
-  when '-t' then $test_run = true
+  when '-p' then type = :pronounce
+  when '-s' then type = :single
+  when '-t' then type = :test
   end
 end
 
-if $pronounce_run
+if type == :pronounce
   puts CymraegBot::Pronouncer.new(ARGV.first).pronunciations
   exit
 end
 
 while true
-  if not $test_run
+  if type == :normal
     tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
     offset = tomorrow - Time.now
     puts 'sleeping til midnight (' + offset.to_s + ' secs)'
@@ -82,11 +82,12 @@ while true
          (word[:stem] ? "\n\n***Stem***: " + word[:stem] : '')
   puts text
 
-  if not $test_run
+  if type != :test
     reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot ' + $version)
     reddit.authorize!
     learnwelsh = reddit.subreddit_from_name('learnwelsh')
-    learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
-  else break
+    #learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
   end
+
+  break if type != :normal
 end
