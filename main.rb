@@ -86,7 +86,7 @@ while true
     reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot ' + $version)
     reddit.authorize!
     learnwelsh = reddit.subreddit_from_name('learnwelsh')
-    #learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+    learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
   end
 
   break if type != :normal
