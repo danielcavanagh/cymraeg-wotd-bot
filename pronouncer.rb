@@ -89,7 +89,7 @@ module CymraegBot
         .gsub('ch', 'x')
         .gsub(/(?<!f)f/, 'v')
         .gsub(/ff|ph/, 'f')
-        .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel})/, 'j') \
+        .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel}|w(?!#{Vowel}))/, 'j') \
         # clusters
         .gsub('st', 'sd') \
         # w
@@ -117,7 +117,7 @@ module CymraegBot
         .gsub('%!', 'ei')
         .gsub('%#', 'eɨ')
         .gsub('%w', 'ɛu') # TODO also long e in north
-        .gsub('!w', 'ɪu')
+        .gsub(/!w(?=#{UncoveredConsonant})/, 'ɪu')
         .gsub(/(#w|yw)(?=#{UncoveredConsonant})/, 'ɨu') # TODO also əu for yw sometimes
         .gsub('&!', 'ɔi')
         .gsub('&#', 'ɔɨ') # TODO also long o in north
