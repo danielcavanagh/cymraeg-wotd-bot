@@ -57,7 +57,7 @@ module CymraegBot
     end
 
     def meanings
-      @meanings ||= main_entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).join(', ') }
+      @meanings ||= main_entry.css('[property=CSGR_Equivalents][lang=en]').take(2).map {|type| type.css('[property=CSGR_term]').take(4).map(&:text).uniq.join(', ') }.uniq
     end
 
     def is_noun
