@@ -35,7 +35,7 @@ while true
     tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
     offset = tomorrow - Time.now
     puts 'sleeping til midnight (' + offset.to_s + ' secs)'
-    sleep(offset)
+    sleep offset
   end
 
   word = nil
@@ -43,7 +43,7 @@ while true
   while true
     begin
       word_id =
-        if ARGV.any? then ARGV.shift
+        if ARGV.any? then ARGV.first
         elsif open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
         else nil
         end
@@ -52,10 +52,16 @@ while true
       gpc = CymraegBot::GPCParser.new(doc)
       if gpc.word
         word = CymraegBot::BangorParser.new(gpc).find
-        break if word
+        break if word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
       end
     rescue
+      puts $!
       next
+    end
+
+    if ARGV.any?
+      puts 'no word or word has the same definition'
+      exit
     end
   end
 
