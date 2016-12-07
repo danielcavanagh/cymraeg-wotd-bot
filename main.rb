@@ -43,10 +43,11 @@ while true
   while true
     begin
       word_id =
-        if ARGV.any? then ARGV.first
+        if ARGV.any? then Nokogiri::XML(open('http://welsh-dictionary.ac.uk/gpc/servlet?func=search&str=' + ARGV.first).read).at_css('matchId').text rescue nil
         elsif open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
         else nil
         end
+      next if not word_id
       doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
 
       gpc = CymraegBot::GPCParser.new(doc)
