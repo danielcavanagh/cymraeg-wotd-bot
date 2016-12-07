@@ -12,7 +12,7 @@ module CymraegBot
   class Pronouncer
     using Refinements
 
-    UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɫɬmm̥nn̥prr̥sʃtθvwx]'
+    UncoveredConsonant = 'tʃ|dʒ|[bdðfghjklɫɬmm̥nn̥prr̥sʃtθvwχ]'
     Consonant = "(#{UncoveredConsonant})"
     Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=yə]'
     LongableVowel = '[@%!#&]'
@@ -86,7 +86,7 @@ module CymraegBot
         .gsub('rh', 'r̥')
         .gsub(/s!(?=#{Vowel})|sh|(?<=t)ch$/, 'ʃ')
         .gsub('th', 'θ')
-        .gsub('ch', 'x')
+        .gsub('ch', 'χ')
         .gsub(/(?<!f)f/, 'v')
         .gsub(/ff|ph/, 'f')
         .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel}|w(?!#{Vowel}))/, 'j') \
@@ -94,7 +94,7 @@ module CymraegBot
         .gsub('st', 'sd') \
         # w
         .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
-        .gsub(/(?<=x)w/, 'ʷ')
+        .gsub(/(?<=χ)w/, 'ʷ')
         .gsub(/(?<=#{UncoveredConsonant}|#{Vowel}{2})w(?=#{UncoveredConsonant})/, '=') \
         # long vowels
         .gsub('â', 'ɑː')
@@ -153,10 +153,10 @@ module CymraegBot
         if syllable !~ /#{Consonant}/ then syllable # this should only match single-vowel words
         else
           syllable
-            .sub(/(?<!#{Vowel})(?<=#{LongableVowel})(?=[bdðfgθvx]$)/, 'ː') # preceeding certain consonants
+            .sub(/(?<!#{Vowel})(?<=#{LongableVowel})(?=[bdðfgθvχ]$)/, 'ː') # preceeding certain consonants
             .sub(/(?<=#{LongableVowel})(?=s?$)/, 'ː') # word-final s or word-final vowel
         end
-      elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bdðfgθvx]/ then syllable + 'ː' # preceeding certain consonants
+      elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bdðfgθvχ]/ then syllable + 'ː' # preceeding certain consonants
       else syllable
       end
     end
