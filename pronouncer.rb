@@ -38,9 +38,9 @@ module CymraegBot
         syll.sub(/(?<=#{Vowel})(?=(ɬ|s)#{Consonant})/, 'ː') # long vowels before consonant clusters beginning with ll and s
       end
       north_ipa = deprotect_vowels(north_syllables.join)
-        .gsub('l', 'ɫ') # dark l
 
-      south_syllables = long_syllables(stressed_syllables, stress_i).each_with_index.map do |syll, i|
+      #south_syllables = long_syllables(stressed_syllables, stress_i).each_with_index.map do |syll, i|
+      south_syllables = long_syllables(stressed_syllables, north_long_i).each_with_index.map do |syll, i|
         if i == syllables.length - 2 then syll.sub(/(?<=#{Vowel})ː(?=ɬ#{Consonant})/, '') # short vowels in the penult before ll
         else syll
         end
@@ -87,7 +87,7 @@ module CymraegBot
         .gsub(/s!(?=#{Vowel})|sh|(?<=t)ch$/, 'ʃ')
         .gsub('th', 'θ')
         .gsub('ch', 'χ')
-        .gsub(/(?<!f)f/, 'v')
+        .gsub(/(?<!f)f(?!f)/, 'v')
         .gsub(/ff|ph/, 'f')
         .gsub(/(?<=^|#{UncoveredConsonant})!(?=#{Vowel}|w(?!#{Vowel}))/, 'j') \
         # clusters

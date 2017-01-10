@@ -75,8 +75,8 @@ while true
 
   pronunciation =
     if word[:pronunciations] then
-      if word[:pronunciations][:north][0] == word[:pronunciations][:south][0] then '[' + word[:pronunciations][:north][0] + ']'
-      else '[' + word[:pronunciations][:north][0] + '] (North), [' + word[:pronunciations][:south][0] + '] (South)'
+      if word[:pronunciations][:north][0] == word[:pronunciations][:south][0] then '/' + word[:pronunciations][:north][0] + '/'
+      else '/' + word[:pronunciations][:north][0] + '/ (North), /' + word[:pronunciations][:south][0] + '/ (South)'
       end
     else nil
     end
