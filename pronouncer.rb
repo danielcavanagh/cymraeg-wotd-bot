@@ -59,7 +59,7 @@ module CymraegBot
 
     def syllables
       @syllables ||=
-        base_ipa.to_enum(:scan, /^(#{Consonant})*|(?<!#{Consonant})(#{Consonant})(?=#{Vowel})|(?<=#{Consonant})(#{Consonant})+(?=#{Vowel})|(?<=#{Vowel}{2})#{Vowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
+        base_ipa.to_enum(:scan, /^(#{Consonant})*|(?<!#{Consonant})(#{Consonant})(?=#{Vowel})|(?<=#{Consonant})(#{Consonant})+(?=#{Vowel})|(?<=#{Vowel}{2})#{Vowel}|(?<=#)#{LongableVowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
         .reverse.scan(base_ipa.length..0) { |prev, pos| pos...prev.first }.reverse # map the indices to ranges
         .map { |range| base_ipa[range] } # map indices to substrings (ie. syllables)
     end
@@ -122,6 +122,7 @@ module CymraegBot
         .gsub('&#', 'ɔɨ') # TODO also long o in north
         .gsub('&%', 'ɔɨ') # TODO also long o in north
         .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') # TODO also long w in north. sometimes w is w, not u, depending on preceeding consonant?
+        .gsub(/y(?=#{LongableVowel})/, '#')
         .gsub('y', 'ə') # lucky last. undo this in the final syllable later on
     end
 
