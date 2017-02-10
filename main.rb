@@ -109,7 +109,7 @@ rescue
       to ENV['gmail_username']
       subject 'cwotd bot error'
       text_part {
-        body $!.to_s
+        body $!.message + "\n" + $!.backtrace.join("\n")
       }
     }
   } if ENV['gmail_username']
