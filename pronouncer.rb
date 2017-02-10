@@ -14,7 +14,7 @@ module CymraegBot
 
     Consonant = 'tʃ|dʒ|[bdðfghjklɬmm̥nn̥prr̥sʃtθvwχ]'
     Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=yə]'
-    LongableVowel = '[@%!#&]'
+    LongableVowel = '[@%!#&=]'
 
     attr_reader :word
 

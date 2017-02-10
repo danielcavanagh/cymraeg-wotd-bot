@@ -9,6 +9,7 @@ require 'json'
 require 'nokogiri'
 require 'open-uri'
 require 'redd'
+require 'gmail'
 
 require './bangor-parser.rb'
 require './gpc-parser.rb'
@@ -32,7 +33,10 @@ if type == :pronounce
   exit
 end
 
+
 while true
+begin
+  raise Error.new('this is a terrible error')
   if type == :normal
     tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
     offset = tomorrow - Time.now
@@ -99,4 +103,16 @@ while true
   end
 
   break if type != :normal
+
+rescue
+  Gmail.new(ENV['gmail_username'], ENV['gmail_password']) {|gmail|
+    gmail.deliver {
+      to ENV['gmail_username']
+      subject 'cwotd bot error'
+      text_part {
+        body $!.to_s
+      }
+    }
+  } if ENV['gmail_username']
+end
 end
