@@ -36,7 +36,6 @@ end
 
 while true
 begin
-  raise Error.new('this is a terrible error')
   if type == :normal
     tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
     offset = tomorrow - Time.now
