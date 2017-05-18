@@ -1,7 +1,7 @@
 # encoding: utf-8
 $stdout.sync = true
 
-$version = '0.5.5'
+$version = '0.6.0'
 puts 'cymraeg bot ' + $version
 
 require 'date'
@@ -95,10 +95,20 @@ begin
   puts text
 
   if type != :test
-    reddit = Redd.it(:script, ENV['reddit_client_id'], ENV['reddit_secret'], ENV['reddit_username'], ENV['reddit_password'], user_agent: 'cymraeg wotd bot ' + $version)
-    reddit.authorize!
-    learnwelsh = reddit.subreddit_from_name('learnwelsh')
-    learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+    reddit = Redd.it(
+      user_agent: 'cymraeg wotd bot ' + $version,
+      client_id: ENV['reddit_client_id'],
+      secret: ENV['reddit_secret'],
+      username: ENV['reddit_username'],
+      password: ENV['reddit_password']
+    )
+    throw 'unable to sign in to reddit' if not reddit
+
+    learnwelsh = reddit.subreddit('learnwelsh')
+    throw 'unable to load subreddit' if not learnwelsh
+
+    res = learnwelsh.submit('WWOTD: ' + word[:word].capitalize, text: text, sendreplies: false)
+    throw 'unable to submit new word' if not res
   end
 
   break if type != :normal
