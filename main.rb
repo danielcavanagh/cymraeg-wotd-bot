@@ -27,9 +27,11 @@ while ARGV.any? and ARGV.first[0] == '-'
 end
 
 if type == :pronounce
-  p = CymraegBot::Pronouncer.new(ARGV.first).pronunciations
-  puts 'north: ' + p[:north][0]
-  puts 'south: ' + p[:south][0]
+  all_ps = ARGV.map {|word|
+    CymraegBot::Pronouncer.new(word).pronunciations
+  }
+  puts 'north: ' + all_ps.map {|p| p[:north][0] }.join(' ')
+  puts 'south: ' + all_ps.map {|p| p[:south][0] }.join(' ')
   exit
 end
 
