@@ -12,9 +12,12 @@ module CymraegBot
   class Pronouncer
     using Refinements
 
-    Consonant = 'tʃ|dʒ|[bdðfghjklɬmm̥nn̥prr̥sʃtθvwχ]'
-    Vowel = '[ɑa@eɛ%iɪ!ɨɨ̞#oɔ&uʊ=yə]'
-    LongableVowel = '[@%!#&=]'
+    Consonant = 'tʃ|dʒ|[gχ]ʷ|[bdðfghjklɬmm̥nŋn̥prr̥sʃtθvwχ]'
+    Vowel = "[ɑa@eɛ%iɪ!ɨɨ\u031e#oɔ&uʊ=yə]"
+    NonSyllabicVowel = "[a\u032fe\u032fi\u032fɨ\u032fo\u032fu\u032f]"
+    LongVowel = "[ɑa@eɛ%iɪ!ɨɨ\u031e#oɔ&uʊ=yə]ː"
+    LongableVowel = '[@%!#&=y]'
+    #LongableVowel = '[@%!#&=]'
 
     attr_reader :word
 
@@ -31,15 +34,25 @@ module CymraegBot
       ['', '']
     end
 
-    def ipa
-      north_long_i = stress_i == syllables.length - 1 ? stress_i : nil
-      north_syllables = long_syllables(stressed_syllables, north_long_i).map do |syll|
-        syll.sub(/(?<=#{Vowel})(?=(ɬ|s)(#{Consonant}))/, 'ː') # long vowels before consonant clusters beginning with ll and s
+    # if the prounciation can't be predicted (ie. is exceptional) then just stick it here
+    def exception
+      case word
+      when 'y' then ['ˈə'] * 2
+      when 'yr' then ['ˈər'] * 2
+      when 'til' then ['ˈtɪl'] * 2
+      else nil
       end
+    end
+
+    def ipa
+      return exception if exception
+
+      north_long_i = stress_i == syllables.length - 1 ? stress_i : nil
+      north_syllables = long_syllables(north_adj_sylls(adjusted_syllables), north_long_i)
       north_ipa = deprotect_vowels(north_syllables.join)
 
-      #south_syllables = long_syllables(stressed_syllables, stress_i).each_with_index.map do |syll, i|
-      south_syllables = long_syllables(stressed_syllables, north_long_i).each_with_index.map do |syll, i|
+      #south_syllables = long_syllables(adjusted_syllables, stress_i).each_with_index.map do |syll, i|
+      south_syllables = long_syllables(adjusted_syllables, north_long_i).each_with_index.map do |syll, i|
         if i == syllables.length - 2 then syll.sub(/(?<=#{Vowel})ː(?=ɬ(#{Consonant}))/, '') # short vowels in the penult before ll
         else syll
         end
@@ -47,21 +60,13 @@ module CymraegBot
       south_ipa = deprotect_vowels(south_syllables.join)
         .gsub('ɨ̞', 'ɪ') # u -> i
         .gsub('ɨ', 'i') # u -> i
-        .gsub(/(?<=#{Consonant}|#{Vowel}{2})ɪ$/, 'i') # word-final ɪ is raised
-        .gsub('ɑːi', 'ai')
+        .gsub('ɨ̯', 'i̯') # u -> i
+        .gsub(/(?<=#{Consonant}|(#{Vowel}){2})ɪ$/, 'i') # word-final ɪ is raised
 
-      # TODO epenthetic echo vowel, eg. cenedl -> 'kenedel
       # TODO acute accent (´) is sometimes used to mark a stressed final syllable in a polysyllabic word.
       # TODO irregular stress
 
       [north_ipa, south_ipa]
-    end
-
-    def syllables
-      @syllables ||=
-        base_ipa.to_enum(:scan, /^(#{Consonant})*|(?<!#{Consonant})(#{Consonant})(?=#{Vowel})|(?<=#{Consonant})(#{Consonant})+(?=#{Vowel})|(?<=#{Vowel}{2})#{Vowel}|(?<=#)#{LongableVowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
-        .reverse.scan(base_ipa.length..0) { |prev, pos| pos...prev.first }.reverse # map the indices to ranges
-        .map { |range| base_ipa[range] } # map indices to substrings (ie. syllables)
     end
 
     def base_ipa
@@ -81,6 +86,7 @@ module CymraegBot
         .gsub(/^mh/, 'm̥')
         .gsub(/n+/, 'n')
         .gsub(/^nh/, 'n̥')
+        .gsub(/ng/, 'ŋ')
         .gsub(/^ngh/, 'ŋ̊')
         .gsub('rh', 'r̥')
         .gsub(/s!(?=#{Vowel})|sh|(?<=t)ch$/, 'ʃ')
@@ -88,13 +94,15 @@ module CymraegBot
         .gsub('ch', 'χ')
         .gsub(/(?<!f)f(?!f)/, 'v')
         .gsub(/ff|ph/, 'f')
-        .gsub(/(?<=^|#{Consonant})!(?=#{Vowel}|w(?!#{Vowel}))/, 'j') \
+        .gsub(/(?<=^|#{Consonant})!(?=(#{Vowel})|w(?=#{Consonant}))/, 'j') \
         # clusters
         .gsub('st', 'sd') \
         # w
-        .gsub(/(?<=g)w(?=r|n)/, 'ʷ')
+        .gsub(/(?<=g)w(?=l|n|r)/, 'ʷ')
         .gsub(/(?<=χ)w/, 'ʷ')
-        .gsub(/(?<=#{Consonant}|#{Vowel}{2})w(?=#{Consonant})/, '=') \
+        .gsub(/(?<!^)w(?=#{Consonant}|$)/, '=')
+        .gsub(/(?<=gw)y/, '#')
+        .gsub(/(?<!#{Vowel})w(?=y)/, '=') \
         # long vowels
         .gsub('â', 'ɑː')
         .gsub('ê', 'eː')
@@ -109,32 +117,73 @@ module CymraegBot
         .gsub('ò', 'ɔ')
         .gsub(/ù|ỳ/, 'ɨ̞')
         .gsub('ẁ', 'ʊ') \
-        # diphthongs TODO how many of these are needed
-        .gsub(/@#|á#/, 'aɨ')
-        .gsub('@w', 'au') # TODO also long a in north
-        .gsub('@%', 'ɑːɨ')
-        .gsub('%!', 'ei')
-        .gsub('%#', 'eɨ')
-        .gsub('%w', 'ɛu') # TODO also long e in north
-        .gsub(/!w(?=#{Consonant})/, 'ɪu')
-        .gsub(/(#w|yw)(?=#{Consonant})/, 'ɨu') # TODO also əu for yw sometimes
-        .gsub('&!', 'ɔi')
-        .gsub('&#', 'ɔɨ') # TODO also long o in north
-        .gsub('&%', 'ɔɨ') # TODO also long o in north
-        .gsub(/(?<!#{Vowel})wy/, 'ʊɨ') # TODO also long w in north. sometimes w is w, not u, depending on preceeding consonant?
-        .gsub(/y(?=#{LongableVowel})/, '#')
-        .gsub('y', 'ə') # lucky last. undo this in the final syllable later on
+        # diphthongs
+        .gsub(/(?<=#{Vowel})!/, 'i̯')
+        .gsub(/(?<=#{Vowel})#/, 'ɨ̯')
+        .gsub(/(?<=#{Vowel})%/, 'e̯')
+        .gsub(/(?<=#{Vowel})y/, 'ɨ̯')
+        .gsub(/(?<=#{Vowel})=/, 'u̯') \
+        # disyllabic vowels
+        .gsub('á', '@')
+        .gsub('é', '%')
+        .gsub('í', '!')
+        .gsub('ó', '&')
+        .gsub('ú', '#')
+    end
+
+    def syllables
+      @syllables ||=
+        base_ipa.to_enum(:scan, /^(#{Consonant})*|(?<!#{Consonant})(#{Consonant})(?=#{Vowel})|(?<=#{Consonant})(#{Consonant})+(?=#{Vowel})|(?<=#{Vowel}|#{LongVowel}|#{NonSyllabicVowel})#{Vowel}(?!\u032f)|(?<=#)#{LongableVowel}/).map { Regexp.last_match.begin(0) } # find starting index of each syllable
+        .reverse.scan(base_ipa.length..0) { |prev, pos| pos...prev.first }.reverse # map the indices to ranges
+        .map { |range| base_ipa[range] } # map indices to substrings (ie. syllables)
     end
 
     def stress_i
       @stress_i ||= syllables.length == 1 ? 0 : syllables.length - 2
     end
 
-    def stressed_syllables
-      @stressed_syllables ||= syllables.each_with_index.map do |syll, i|
+    # alters diphthongs depending on their syllable, lengthens 'y' in final syllable, and marks stressed syllable
+    def adjusted_syllables
+      @adjusted_ayllables ||= syllables.each_with_index.map do |syll, i|
         stressed = i == stress_i ? 'ˈ' + syll : syll
-        if i == syllables.length - 1 then stressed.sub(/(?<=#{Consonant})ə(?=#{Consonant})#{syllables.length > 1 ? '?' : ''}/, '#')
-        else stressed
+
+        # alter diphthongs in monosyllabic words / final syllables where relevant
+        # yw - final syllable -> ɨ̞u̯ (then u -> i for south)
+        # ae - nonfinal syllable -> eɨ̯ (then u -> i for south)
+        diph_adjusted =
+          if not syllables[i + 1].nil? and stressed.include?('@e̯') then stressed.sub('@e̯', 'ee̯')
+          else stressed
+          end
+
+        #if i == syllables.length - 1 then stressed.sub(/(?<=#{Consonant})y(?=#{Consonant})#{syllables.length > 1 ? '?' : ''}/, '#')
+        if i == syllables.length - 1 then diph_adjusted.sub(/y/, '#')
+        else diph_adjusted
+        end
+      end
+    end
+
+    def north_adj_sylls(syllables)
+      syllables.each_with_index.map do |syll, i|
+        lengthened = syll.sub(/(?<=#{Vowel})(?=(ɬ|s)(#{Consonant}))/, 'ː') # long vowels before consonant clusters beginning with ll and s
+
+        # alter diphthongs in monosyllabic words / final syllables where relevant
+        # ae - final syllable ->  aːɨ̯
+        # oe - monosyllabic word -> oːɨ̯
+        # wy - monosyllabic word -> uːɨ̯
+        # aw - open monosyllabic word -> aːu̯
+        # ew - open monosyllabic word -> eːu̯
+        if not syllables[i + 1].nil? then lengthened
+        else
+          if lengthened.include?('@e̯') then lengthened.sub('@e̯', 'ɑːɨ̯')
+          elsif i == 0
+            if lengthened =~ /@u̯$/ then lengthened.sub('@u̯', 'ɑːu̯')
+            elsif lengthened =~ /%u̯$/ then lengthened.sub('%u̯', 'eːu̯')
+            elsif lengthened.include?('&e̯') then lengthened.sub('&e̯', 'oːe̯')
+            elsif lengthened.include?('=ɨ̯') then lengthened.sub('=ɨ̯', 'uːɨ̯')
+            else lengthened
+            end
+          else lengthened
+          end
         end
       end
     end
@@ -154,7 +203,7 @@ module CymraegBot
           syllable
             .sub(/(?<!#{Vowel})(#{LongableVowel})(?=[bχdðfgθv]$)/, '\1ː') # preceeding certain consonants
             .sub(/(?<!#{Vowel})([!#])(?=[lnr]$)/, '\1ː') # preceeding certain consonants
-            .sub(/(#{LongableVowel})(?=s?$)/, '\1ː') # word-final s or word-final vowel
+            .sub(/(#{LongableVowel})(?=s?$)/, '\1ː') # long vowel before word-final s or when open
         end
       elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bχdðfgsθv]/ then syllable + 'ː' # preceeding certain consonants
       else syllable
@@ -175,6 +224,9 @@ module CymraegBot
         .gsub('#', 'ɨ̞')
         .gsub('=ː', 'uː')
         .gsub('=', 'ʊ')
+        .gsub('yː', 'ɨː')
+        .gsub('y', 'ə')
+        .gsub('e̯', 'ɨ̯')
     end
   end
 end
