@@ -1,7 +1,7 @@
 # encoding: utf-8
 $stdout.sync = true
 
-$version = '0.6.0'
+$version = '0.6.1'
 puts 'cymraeg bot ' + $version
 
 require 'date'
