@@ -12,7 +12,7 @@ module CymraegBot
   class Pronouncer
     using Refinements
 
-    Consonant = 'tʃ|dʒ|[gχ]ʷ|[bdðfghjklɬmm̥nŋn̥prr̥sʃtθvwχ]'
+    Consonant = 'tʃ|dʒ|[ɡχ]ʷ|[bdðfɡhjklɬmm̥nŋn̥prr̥sʃtθvwχ]'
     Vowel = "[ɑa@eɛ%iɪ!ɨɨ\u031e#oɔ&uʊ=yə]"
     NonSyllabicVowel = "[a\u032fe\u032fi\u032fɨ\u032fo\u032fu\u032f]"
     LongVowel = "[ɑa@eɛ%iɪ!ɨɨ\u031e#oɔ&uʊ=yə]ː"
@@ -81,13 +81,14 @@ module CymraegBot
         # consonants
         .gsub(/c(?!h)/, 'k')
         .gsub('dd', 'ð')
+        .gsub('g', 'ɡ')
         .gsub('j', 'dʒ')
         .gsub('ll', 'ɬ')
         .gsub(/^mh/, 'm̥')
-        .gsub(/n+/, 'n')
         .gsub(/^nh/, 'n̥')
-        .gsub(/ng/, 'ŋ')
-        .gsub(/^ngh/, 'ŋ̊')
+        .gsub(/n+/, 'n')
+        .gsub(/^nɡh/, 'ŋ̊')
+        .gsub(/nɡ/, 'ŋ')
         .gsub('rh', 'r̥')
         .gsub(/s!(?=#{Vowel})|sh|(?<=t)ch$/, 'ʃ')
         .gsub('th', 'θ')
@@ -98,10 +99,10 @@ module CymraegBot
         # clusters
         .gsub('st', 'sd') \
         # w
-        .gsub(/(?<=g)w(?=l|n|r)/, 'ʷ')
+        .gsub(/(?<=ɡ)w(?=(l|n|r)(#{Vowel}))/, 'ʷ')
         .gsub(/(?<=χ)w/, 'ʷ')
         .gsub(/(?<!^)w(?=#{Consonant}|$)/, '=')
-        .gsub(/(?<=gw)y/, '#')
+        .gsub(/(?<=ɡw)y/, '#')
         .gsub(/(?<!#{Vowel})w(?=y)/, '=') \
         # long vowels
         .gsub('â', 'ɑː')
@@ -201,11 +202,11 @@ module CymraegBot
         if syllable !~ /(#{Consonant})/ then syllable # this should only match single-vowel words
         else
           syllable
-            .sub(/(?<!#{Vowel})(#{LongableVowel})(?=[bχdðfgθv]$)/, '\1ː') # preceeding certain consonants
+            .sub(/(?<!#{Vowel})(#{LongableVowel})(?=[bχdðfɡθv]$)/, '\1ː') # preceeding certain consonants
             .sub(/(?<!#{Vowel})([!#])(?=[lnr]$)/, '\1ː') # preceeding certain consonants
             .sub(/(#{LongableVowel})(?=s?$)/, '\1ː') # long vowel before word-final s or when open
         end
-      elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bχdðfgsθv]/ then syllable + 'ː' # preceeding certain consonants
+      elsif syllable =~ /#{LongableVowel}$/ and next_syll =~ /^[bχdðfɡsθv]/ then syllable + 'ː' # preceeding certain consonants
       else syllable
       end
     end
