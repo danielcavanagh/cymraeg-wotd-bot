@@ -60,7 +60,13 @@ begin
       gpc = CymraegBot::GPCParser.new(doc)
       if gpc.word
         word = CymraegBot::BangorParser.new(gpc).find
-        break if word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
+        next unless word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
+
+        puts 'word: ' + word[:word]
+        puts 'meaning: ' + word[:meanings][0]
+        print 'post this word? [Yn] '
+        answer = STDIN.gets.strip
+        break if answer.downcase == 'y' or answer == ''
       end
     rescue
       puts $!
