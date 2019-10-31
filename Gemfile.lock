@@ -20,9 +20,9 @@ GEM
     mime-types (3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2016.0521)
-    mini_portile2 (2.1.0)
-    nokogiri (1.7.1)
-      mini_portile2 (~> 2.1.0)
+    mini_portile2 (2.4.0)
+    nokogiri (1.10.4)
+      mini_portile2 (~> 2.4.0)
     public_suffix (2.0.5)
     redd (0.8.8)
       http (~> 2.2)
@@ -39,7 +39,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  nokogiri (~> 1.6)
+  nokogiri (~> 1.10)
   redd (~> 0.7)
   ruby-gmail (~> 0.3)
 
