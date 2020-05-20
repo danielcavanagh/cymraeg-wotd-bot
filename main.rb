@@ -59,6 +59,8 @@ begin
 
       gpc = CymraegBot::GPCParser.new(doc)
       if gpc.word
+        puts 'word from gpc: ' + gpc.word
+
         word = CymraegBot::BangorParser.new(gpc).find
         next unless word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
 
@@ -122,12 +124,14 @@ begin
   break if type != :normal
 
 rescue
+  err = $!.message + "\n" + $!.backtrace.join("\n")
+  puts 'error: ' + err
   Gmail.new(ENV['gmail_username'], ENV['gmail_password']) {|gmail|
     gmail.deliver {
       to ENV['gmail_username']
       subject 'cwotd bot error'
       text_part {
-        body $!.message + "\n" + $!.backtrace.join("\n")
+        body err
       }
     }
   } if ENV['gmail_username']
