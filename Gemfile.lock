@@ -19,7 +19,7 @@ GEM
     mime (0.4.4)
     mini_mime (1.0.2)
     mini_portile2 (2.4.0)
-    nokogiri (1.10.4)
+    nokogiri (1.10.10)
       mini_portile2 (~> 2.4.0)
     public_suffix (4.0.1)
     redd (0.8.8)
@@ -37,7 +37,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  nokogiri (~> 1.6)
+  nokogiri (~> 1.10)
   redd (~> 0.7)
   ruby-gmail (~> 0.3)
 
