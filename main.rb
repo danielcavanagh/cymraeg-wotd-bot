@@ -4,12 +4,13 @@ $stdout.sync = true
 $version = '0.6.2'
 puts 'cymraeg bot ' + $version
 
+require 'cgi'
 require 'date'
+require 'gmail'
 require 'json'
 require 'nokogiri'
 require 'open-uri'
 require 'redd'
-require 'gmail'
 
 require './bangor-parser.rb'
 require './gpc-parser.rb'
@@ -17,7 +18,7 @@ require './pronouncer.rb'
 
 # FIX word 'us' has no data
 
-type = :normal
+type = :continuous
 while ARGV.any? and ARGV.first[0] == '-'
   case ARGV.shift
   when '-p' then type = :pronounce
@@ -25,6 +26,8 @@ while ARGV.any? and ARGV.first[0] == '-'
   when '-t' then type = :test
   end
 end
+
+given_word = ARGV.first
 
 if type == :pronounce
   all_ps = ARGV.map {|word|
@@ -38,7 +41,7 @@ end
 
 while true
 begin
-  if type == :normal
+  if type == :continuous
     tomorrow = Date.today.next_day.to_time.utc + Time.now.utc_offset
     offset = tomorrow - Time.now
     puts 'sleeping til midnight (' + offset.to_s + ' secs)'
@@ -50,34 +53,38 @@ begin
   while true
     begin
       word_id =
-        if ARGV.any? then Nokogiri::XML(URI::open('http://welsh-dictionary.ac.uk/gpc/servlet?func=search&str=' + ARGV.first).read).at_css('matchId').text rescue nil
-        elsif URI::open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
+        if given_word then Nokogiri::XML(URI::open('https://geiriadur.ac.uk/gpc/servlet?func=search&str=' + CGI.escape(given_word)).read).at_css('matchId').text rescue nil
+        elsif URI::open('https://geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
         else nil
         end
-      next if not word_id
-      doc = Nokogiri::XML(URI::open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
 
-      gpc = CymraegBot::GPCParser.new(doc)
-      if gpc.word
-        puts 'word from gpc: ' + gpc.word
+      if word_id
+        doc = Nokogiri::XML(URI::open('https://geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
+        gpc = CymraegBot::GPCParser.new(doc)
+        if gpc.word
+          puts 'word from gpc: ' + gpc.word unless given_word
 
-        word = CymraegBot::BangorParser.new(gpc).find
-        next unless word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
+          word = CymraegBot::BangorParser.new(gpc).find
+          if word and (word[:meanings].length > 1 or word[:meanings].first != gpc.word)
+            puts 'word: ' + word[:word]
+            puts 'meaning: ' + word[:meanings][0]
+            print 'post this word? [Yn] '
+            answer = STDIN.gets.strip
+            break if answer.downcase == 'y' or answer == ''
+            exit if given_word
 
-        puts 'word: ' + word[:word]
-        puts 'meaning: ' + word[:meanings][0]
-        print 'post this word? [Yn] '
-        answer = STDIN.gets.strip
-        break if answer.downcase == 'y' or answer == ''
+          elsif given_word
+            puts 'no valid definition found in geiriadur bangor'
+            exit
+          end
+        end
+
+      elsif given_word
+        puts 'word not found in gpc'
+        exit
       end
     rescue
       puts 'error: ' + $!.message + "\n" + $!.backtrace.join("\n")
-      next
-    end
-
-    if ARGV.any?
-      puts 'no word or word has the same definition'
-      exit
     end
   end
 
@@ -121,7 +128,7 @@ begin
     throw 'unable to submit new word' if not res
   end
 
-  break if type != :normal
+  break if type != :continuous
 
 rescue
   puts 'error: ' + $!.message + "\n" + $!.backtrace.join("\n")

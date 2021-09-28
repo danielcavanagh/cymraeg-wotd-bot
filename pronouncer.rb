@@ -111,6 +111,13 @@ module CymraegBot
         .gsub('ô', 'oː')
         .gsub(/û|ŷ/, 'ɨː')
         .gsub('ŵ', 'uː') \
+        # TODO this works for amlïaws but does it work for anything else? are these letters even possible?
+        .gsub('ä', 'ɑː')
+        .gsub('ë', 'eː')
+        .gsub('ï', 'iː')
+        .gsub('ö', 'oː')
+        .gsub(/ü|ÿ/, 'ɨː')
+        .gsub('ẅ', 'uː') \
         # short vowels
         .gsub('à', 'a')
         .gsub('è', 'ɛ')

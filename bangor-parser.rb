@@ -1,6 +1,8 @@
+require 'cgi'
 require 'json'
+require 'net/http'
 require 'nokogiri'
-require 'open-uri'
+require 'uri'
 
 require './gpc-parser.rb'
 require './pronouncer.rb'
@@ -31,12 +33,7 @@ module CymraegBot
 
     def data
       return @data if @data
-      json = nil
-      begin
-        json = URI::open('http://api.termau.cymru/Cysgair/Search/Default.ashx?apikey=C353DE38D8DB4BD6ABD1C78109871EF8&format=json&sln=cy&string=' + word).read
-      rescue
-        raise if $!.message.start_with?('500')
-      end
+      json = Net::HTTP.get(URI('http://api.termau.org/Cysgair/Search/Default.ashx?apikey=701658f94A23486B941D64B70C7BC03C&format=json&dln=cy&string=' + CGI.escape(word)), { Referer: 'http://termau.cymru/' })
       @data = JSON.parse(json, symbolize_names: true) rescue Hash.new
       @data = ({ entries: [] }).merge(@data)
     end
