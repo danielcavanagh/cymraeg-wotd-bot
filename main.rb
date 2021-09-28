@@ -50,12 +50,12 @@ begin
   while true
     begin
       word_id =
-        if ARGV.any? then Nokogiri::XML(open('http://welsh-dictionary.ac.uk/gpc/servlet?func=search&str=' + ARGV.first).read).at_css('matchId').text rescue nil
-        elsif open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
+        if ARGV.any? then Nokogiri::XML(URI::open('http://welsh-dictionary.ac.uk/gpc/servlet?func=search&str=' + ARGV.first).read).at_css('matchId').text rescue nil
+        elsif URI::open('http://www.geiriadur.ac.uk/gpc/servlet?func=random').read =~ /\d+/ then $~.to_s
         else nil
         end
       next if not word_id
-      doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
+      doc = Nokogiri::XML(URI::open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word_id))
 
       gpc = CymraegBot::GPCParser.new(doc)
       if gpc.word
@@ -71,7 +71,7 @@ begin
         break if answer.downcase == 'y' or answer == ''
       end
     rescue
-      puts $!
+      puts 'error: ' + $!.message + "\n" + $!.backtrace.join("\n")
       next
     end
 
@@ -82,7 +82,7 @@ begin
   end
 
   recording_url = 'http://forvo.com/word/' + word[:word] + '/#cy'
-  recording_html = open(recording_url).read rescue ''
+  recording_html = URI::open(recording_url).read rescue ''
   headword =
     if recording_html.include?('#cy') then '[**' + word[:word].capitalize + '**](' + recording_url + ')'
     else word[:word].capitalize
@@ -124,8 +124,7 @@ begin
   break if type != :normal
 
 rescue
-  err = $!.message + "\n" + $!.backtrace.join("\n")
-  puts 'error: ' + err
+  puts 'error: ' + $!.message + "\n" + $!.backtrace.join("\n")
   Gmail.new(ENV['gmail_username'], ENV['gmail_password']) {|gmail|
     gmail.deliver {
       to ENV['gmail_username']

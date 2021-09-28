@@ -31,8 +31,12 @@ module CymraegBot
 
     def data
       return @data if @data
-      json = open('http://api.termau.cymru/Cysgair/Search/Default.ashx?apikey=C353DE38D8DB4BD6ABD1C78109871EF8&format=json&sln=cy&string=' + word).read rescue nil
-puts JSON.parse(json, symbolize_names: true)
+      json = nil
+      begin
+        json = URI::open('http://api.termau.cymru/Cysgair/Search/Default.ashx?apikey=C353DE38D8DB4BD6ABD1C78109871EF8&format=json&sln=cy&string=' + word).read
+      rescue
+        raise if $!.message.start_with?('500')
+      end
       @data = JSON.parse(json, symbolize_names: true) rescue Hash.new
       @data = ({ entries: [] }).merge(@data)
     end

@@ -10,7 +10,7 @@ module CymraegBot
     def initialize(word)
       @doc =
         if word.is_a? Nokogiri::XML::Document then word
-        else doc = Nokogiri::XML(open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word.to_s))
+        else doc = Nokogiri::XML(URI::open('http://www.geiriadur.ac.uk/gpc/servlet?func=entry&id=' + word.to_s))
         end
     end
 
